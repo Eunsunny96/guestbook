@@ -1,5 +1,8 @@
 package org.zerok.guestbook.service;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import jdk.jfr.Frequency;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -10,6 +13,7 @@ import org.zerok.guestbook.dto.GuestbookDTO;
 import org.zerok.guestbook.dto.PageRequestDTO;
 import org.zerok.guestbook.dto.PageResultDTO;
 import org.zerok.guestbook.entity.Guestbook;
+import org.zerok.guestbook.entity.QGuestbook;
 import org.zerok.guestbook.repository.GuestbookRepository;
 
 import java.util.Optional;
@@ -48,8 +52,13 @@ public class GuestbookServiceImpl implements GuestbookService{
 
     @Override
     public PageResultDTO<GuestbookDTO, Guestbook> getList(PageRequestDTO requestDTO) {
+
         Pageable pageable = requestDTO.getPageable(Sort.by("gno").descending());
-        Page<Guestbook> result=repository.findAll(pageable);
+
+        BooleanBuilder booleanBuilder = getSearch(requestDTO);//검색 조건 처리
+
+
+        Page<Guestbook> result=repository.findAll(booleanBuilder,pageable);
 
         Function<Guestbook,GuestbookDTO> fn =(entity ->
                 entityToDTO(entity));
@@ -64,8 +73,8 @@ public class GuestbookServiceImpl implements GuestbookService{
     @Override
     public void modify(GuestbookDTO dto) { //제목과 네용만 수정해서 UPDATE
 
-        Optional<Guestbook> result= repository.findById(dto.getGno());
-        if(result.isPresent()){
+        Optional<Guestbook> result = repository.findById(dto.getGno());
+        if (result.isPresent()) {
             Guestbook entity = result.get();
 
             entity.changeTitle(dto.getTitle());
@@ -73,6 +82,45 @@ public class GuestbookServiceImpl implements GuestbookService{
 
             repository.save(entity);
         }
-
     }
-}
+
+        private BooleanBuilder getSearch(PageRequestDTO requestDTO){
+
+            String type = requestDTO.getType();
+
+            BooleanBuilder booleanBuilder = new BooleanBuilder();
+
+            QGuestbook qGuestbook = QGuestbook.guestbook;
+
+            String keyword= requestDTO.getKeyword();
+
+            BooleanExpression expression = qGuestbook.gno.gt(0L); //gno > 0 조건만 생성
+            booleanBuilder.and(expression);
+
+            if(type == null || type.trim().length()==0){ //검색하는 조건 이 없는 경우
+                return booleanBuilder;
+            }
+
+            //검색 조건을 작성하기
+            BooleanBuilder conditionBuilder = new BooleanBuilder();
+
+            if(type.contains("t")){
+                conditionBuilder.or(qGuestbook.title.contains(keyword));
+
+            }
+            if(type.contains("c")){
+                conditionBuilder.or(qGuestbook.content.contains(keyword));
+            }
+            if(type.contains("w")){
+                conditionBuilder.or(qGuestbook.writer.contains(keyword));
+
+            }
+
+            booleanBuilder.and(conditionBuilder);
+
+            return booleanBuilder;
+
+        }
+    }
+
+

@@ -71,7 +71,8 @@ public class GuestbookController {
     }
 
     @PostMapping("/modify")
-    public String modify(GuestbookDTO dto, @ModelAttribute("requestDTO") //수정해야 하는 글의 정보를 가지는 GuestbookDTO
+    public String modify(GuestbookDTO dto,
+                         @ModelAttribute("requestDTO") //수정해야 하는 글의 정보를 가지는 GuestbookDTO
             PageRequestDTO requestDTO, RedirectAttributes redirectAttributes){//기존 페이지 유지 PageRequest, 리다이렉트로 이동 RedirectAttributes
         log.info("post modify...................");
         log.info("dto : " +dto);
@@ -79,6 +80,8 @@ public class GuestbookController {
         service.modify(dto);
 
         redirectAttributes.addAttribute("page",requestDTO.getPage());
+        redirectAttributes.addAttribute("type",requestDTO.getType());
+        redirectAttributes.addAttribute("keyword",requestDTO.getKeyword());
         redirectAttributes.addAttribute("gno",dto.getGno());
 
         return "redirect:/guestbook/read"; //수정이 다 되면 조회페이지

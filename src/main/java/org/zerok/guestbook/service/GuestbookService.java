@@ -6,6 +6,7 @@ import org.zerok.guestbook.dto.PageResultDTO;
 import org.zerok.guestbook.entity.Guestbook;
 
 public interface GuestbookService {
+
     Long register(GuestbookDTO dto);
     GuestbookDTO read(Long gno);
 

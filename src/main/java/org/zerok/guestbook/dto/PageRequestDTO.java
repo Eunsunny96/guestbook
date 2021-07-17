@@ -14,6 +14,8 @@ public class PageRequestDTO { //jpa쪽에서 사용하는 Pageable타입의 객�
 
     private int page;
     private int size;
+    private String type; //검색 조건
+    private String keyword; //검색 키워드
 
     public PageRequestDTO(){
         this.page=1;
